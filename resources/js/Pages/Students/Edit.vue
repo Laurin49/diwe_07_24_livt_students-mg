@@ -1,54 +1,67 @@
 <script setup>
 import InputError from "@/Components/InputError.vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { Head, useForm } from "@inertiajs/vue3";
+import { Head, useForm, usePage, Link } from "@inertiajs/vue3";
 import axios from "axios";
-import { ref, watch } from "vue";
+import { onMounted } from "vue";
+import { watch, ref } from "vue";
 
 defineProps({
     classes: {
         type: Object,
         required: true,
     },
+    student: {
+        type: Object,
+        required: true,
+    },
 });
+
 let sections = ref({});
+let student = usePage().props.student.data;
+
 const form = useForm({
-    name: "",
-    email: "",
-    class_id: "",
-    section_id: "",
+    name: student.name,
+    email: student.email,
+    class_id: student.class.id,
+    section_id: student.section.id,
 });
+
 watch(
     () => form.class_id,
     (newValue) => {
         getSections(newValue);
     }
 );
+
+onMounted(() => {
+    getSections(form.class_id);
+});
+
 const getSections = (classId) => {
     axios.get("/api/sections?class_id=" + classId).then((response) => {
         sections.value = response.data;
     });
 };
 
-const createStudent = () => {
-    form.post(route("students.store"));
+const updateStudent = () => {
+    form.put(route("students.update", student.id));
 };
 </script>
 
 <template>
-    <Head title="Create Student" />
+    <Head title="Update Student" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Create Student
+                Update Student
             </h2>
         </template>
-
         <div class="py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
                 <div class="space-y-6 sm:px-6 lg:px-0 lg:col-span-12">
-                    <form @submit.prevent="createStudent">
+                    <form @submit.prevent="updateStudent">
                         <div class="shadow sm:rounded-md sm:overflow-hidden">
                             <div class="px-4 py-6 space-y-6 bg-white sm:p-6">
                                 <div>
@@ -123,9 +136,9 @@ const createStudent = () => {
                                                     form.errors.class_id,
                                             }"
                                         >
-                                            <option value="">
+                                            <!-- <option value="">
                                                 Select a Class
-                                            </option>
+                                            </option> -->
                                             <option
                                                 v-for="item in classes.data"
                                                 :key="item.id"
@@ -176,17 +189,17 @@ const createStudent = () => {
                             <div
                                 class="px-4 py-3 text-right bg-gray-50 sm:px-6"
                             >
-                                <a
-                                    href="#"
+                                <Link
+                                    :href="route('students.index')"
                                     class="inline-flex items-center px-4 py-2 mr-4 text-sm font-medium text-indigo-700 bg-indigo-100 border border-transparent rounded-md hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
                                     Cancel
-                                </a>
+                                </Link>
                                 <button
                                     type="submit"
                                     class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
-                                    Save
+                                    Update
                                 </button>
                             </div>
                         </div>
